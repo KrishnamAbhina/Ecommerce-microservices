@@ -1,0 +1,93 @@
+
+name: Build and Deploy Ecommerce Backend
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  ACR_NAME: ecommerceacr
+  RESOURCE_GROUP: rg-lab-krishnam-training-20260921
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login using OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push AuthAPI
+        run: |
+          az acr build --registry "$ACR_NAME" \
+            --image authapi:${GITHUB_SHA} \
+            --file AuthAPI/Dockerfile .
+
+      - name: Build and push ProductsAPI
+        run: |
+          az acr build --registry "$ACR_NAME" \
+            --image productsapi:${GITHUB_SHA} \
+            --file ProductsAPI/Dockerfile .
+
+      - name: Build and push CartAPI
+        run: |
+          az acr build --registry "$ACR_NAME" \
+            --image cartapi:${GITHUB_SHA} \
+            --file CartAPI/Dockerfile .
+
+      - name: Build and push OrdersAPI
+        run: |
+          az acr build --registry "$ACR_NAME" \
+            --image ordersapi:${GITHUB_SHA} \
+            --file OrdersAPI/Dockerfile .
+
+      - name: Build and push GatewayEcom
+        run: |
+          az acr build --registry "$ACR_NAME" \
+            --image gatewayecom:${GITHUB_SHA} \
+            --file GatewayEcom/Dockerfile .
+
+      - name: Deploy AuthAPI
+        run: |
+          az containerapp update \
+            --name authapi \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_NAME.azurecr.io/authapi:${GITHUB_SHA}"
+
+      - name: Deploy ProductsAPI
+        run: |
+          az containerapp update \
+            --name productsapi \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_NAME.azurecr.io/productsapi:${GITHUB_SHA}"
+
+      - name: Deploy CartAPI
+        run: |
+          az containerapp update \
+            --name cartapi \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_NAME.azurecr.io/cartapi:${GITHUB_SHA}"
+
+      - name: Deploy OrdersAPI
+        run: |
+          az containerapp update \
+            --name ordersapi \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_NAME.azurecr.io/ordersapi:${GITHUB_SHA}"
+
+      - name: Deploy GatewayEcom
+        run: |
+          az containerapp update \
+            --name gatewayecom \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_NAME.azurecr.io/gatewayecom:${GITHUB_SHA}"
