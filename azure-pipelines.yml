@@ -1,0 +1,71 @@
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  ACR_LOGIN_SERVER: ecommerceacr.azurecr.io
+
+steps:
+- checkout: self
+
+- task: Docker@2
+  displayName: Build and Push AuthAPI
+  inputs:
+    command: buildAndPush
+    containerRegistry: ecommerce-acr-connection
+    repository: authapi
+    Dockerfile: AuthAPI/Dockerfile
+    buildContext: .
+    tags: |
+      $(Build.SourceVersion)
+
+- task: Docker@2
+  displayName: Build and Push ProductsAPI
+  inputs:
+    command: buildAndPush
+    containerRegistry: ecommerce-acr-connection
+    repository: productsapi
+    Dockerfile: ProductsAPI/Dockerfile
+    buildContext: .
+    tags: |
+      $(Build.SourceVersion)
+
+- task: Docker@2
+  displayName: Build and Push CartAPI
+  inputs:
+    command: buildAndPush
+    containerRegistry: ecommerce-acr-connection
+    repository: cartapi
+    Dockerfile: CartAPI/Dockerfile
+    buildContext: .
+    tags: |
+      $(Build.SourceVersion)
+
+- task: Docker@2
+  displayName: Build and Push OrdersAPI
+  inputs:
+    command: buildAndPush
+    containerRegistry: ecommerce-acr-connection
+    repository: ordersapi
+    Dockerfile: OrdersAPI/Dockerfile
+    buildContext: .
+    tags: |
+      $(Build.SourceVersion)
+
+- task: Docker@2
+  displayName: Build and Push GatewayEcom
+  inputs:
+    command: buildAndPush
+    containerRegistry: ecommerce-acr-connection
+    repository: gatewayecom
+    Dockerfile: GatewayEcom/Dockerfile
+    buildContext: .
+    tags: |
+      $(Build.SourceVersion)
