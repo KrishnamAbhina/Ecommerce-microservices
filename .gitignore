@@ -1,0 +1,44 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# .NET build output
+**/bin/
+**/obj/
+
+# Logs
+*.log
+logs/
+
+# Node/build output
+node_modules/
+build/
+dist/
+
+# IDE and OS files
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local application configuration (may contain secrets)
+**/appsettings*.json
+!**/appsettings.example.json
+
+# Docker Compose (exclude until credentials are replaced with environment variables)
+docker-compose.yml
+docker-compose.*.yml
+!docker-compose.example.yml
+
+# Local launch settings
+**/Properties/launchSettings.json
+
+# Backup files
+*.bak
+*.orig.bak
+*.backup.json

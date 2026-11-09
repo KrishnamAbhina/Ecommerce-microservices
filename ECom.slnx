@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Gateway Folder/">
+    <Project Path="GatewayEcom/GatewayEcom.csproj" Id="bab97140-9861-44d8-a755-c932b34df3f3" />
+  </Folder>
+  <Folder Name="/Services/">
+    <Project Path="AuthAPI/AuthAPI.csproj" Id="4cc6f41e-f7fe-41c1-a61e-32547baf13b1" />
+    <Project Path="CartAPI/CartAPI.csproj" Id="580523db-e44b-46be-a7ba-a4026ccdaee1" />
+    <Project Path="OrdersAPI/OrdersAPI.csproj" Id="9d7fc651-1cbb-4e50-a158-151d1780f12c" />
+    <Project Path="ProductsAPI/ProductsAPI.csproj" Id="4ece7ab5-fc98-46fb-9ec6-47e6dbfde73d" />
+  </Folder>
+</Solution>

@@ -1,0 +1,129 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/api/AuthAPI/logout",
+      "UpstreamHttpMethod": [ "Post" ],
+      "DownstreamPathTemplate": "/api/AuthAPI/logout",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "authapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/AuthAPI/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/AuthAPI/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "authapi", "Port": 80 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/CartAPI",
+      "UpstreamHttpMethod": [ "Get", "Post" ],
+      "DownstreamPathTemplate": "/api/CartAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "cartapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/CartAPI/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/CartAPI/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "cartapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ProductsAPI",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamPathTemplate": "/api/ProductsAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/ProductsAPI",
+      "UpstreamHttpMethod": [ "Post" ],
+      "DownstreamPathTemplate": "/api/ProductsAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/ProductsAPI/upload",
+      "UpstreamHttpMethod": [ "Post" ],
+      "DownstreamPathTemplate": "/api/ProductsAPI/upload",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/images/{everything}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamPathTemplate": "/images/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/ProductsAPI/{id}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamPathTemplate": "/api/ProductsAPI/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/ProductsAPI/{everything}",
+      "UpstreamHttpMethod": [ "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/ProductsAPI/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/CategoryAPI",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamPathTemplate": "/api/CategoryAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/CategoryAPI",
+      "UpstreamHttpMethod": [ "Post" ],
+      "DownstreamPathTemplate": "/api/CategoryAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/CategoryAPI/{id}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamPathTemplate": "/api/CategoryAPI/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/CategoryAPI/{everything}",
+      "UpstreamHttpMethod": [ "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/CategoryAPI/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "productsapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/OrdersAPI",
+      "UpstreamHttpMethod": [ "Post" ],
+      "DownstreamPathTemplate": "/api/OrdersAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "ordersapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/OrdersAPI/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/OrdersAPI/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "ordersapi", "Port": 80 } ],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:7145"
+  }
+}
