@@ -1,93 +1,59 @@
 
-name: Build and Deploy Ecommerce Backend
+name: Build and Push Ecommerce Backend Images
 
 on:
   workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
 
 env:
-  ACR_NAME: ecommerceacr
-  RESOURCE_GROUP: rg-lab-krishnam-training-20260921
+  ACR_LOGIN_SERVER: ecommerceacr.azurecr.io
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Azure login using OIDC
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Build and push AuthAPI
+      - name: Login to Azure Container Registry
         run: |
-          az acr build --registry "$ACR_NAME" \
-            --image authapi:${GITHUB_SHA} \
-            --file AuthAPI/Dockerfile .
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login "$ACR_LOGIN_SERVER" \
+            --username "${{ secrets.ACR_USERNAME }}" \
+            --password-stdin
 
-      - name: Build and push ProductsAPI
+      - name: Build AuthAPI
         run: |
-          az acr build --registry "$ACR_NAME" \
-            --image productsapi:${GITHUB_SHA} \
-            --file ProductsAPI/Dockerfile .
+          docker build -f AuthAPI/Dockerfile \
+            -t "$ACR_LOGIN_SERVER/authapi:$GITHUB_SHA" .
+          docker push "$ACR_LOGIN_SERVER/authapi:$GITHUB_SHA"
 
-      - name: Build and push CartAPI
+      - name: Build ProductsAPI
         run: |
-          az acr build --registry "$ACR_NAME" \
-            --image cartapi:${GITHUB_SHA} \
-            --file CartAPI/Dockerfile .
+          docker build -f ProductsAPI/Dockerfile \
+            -t "$ACR_LOGIN_SERVER/productsapi:$GITHUB_SHA" .
+          docker push "$ACR_LOGIN_SERVER/productsapi:$GITHUB_SHA"
 
-      - name: Build and push OrdersAPI
+      - name: Build CartAPI
         run: |
-          az acr build --registry "$ACR_NAME" \
-            --image ordersapi:${GITHUB_SHA} \
-            --file OrdersAPI/Dockerfile .
+          docker build -f CartAPI/Dockerfile \
+            -t "$ACR_LOGIN_SERVER/cartapi:$GITHUB_SHA" .
+          docker push "$ACR_LOGIN_SERVER/cartapi:$GITHUB_SHA"
 
-      - name: Build and push GatewayEcom
+      - name: Build OrdersAPI
         run: |
-          az acr build --registry "$ACR_NAME" \
-            --image gatewayecom:${GITHUB_SHA} \
-            --file GatewayEcom/Dockerfile .
+          docker build -f OrdersAPI/Dockerfile \
+            -t "$ACR_LOGIN_SERVER/ordersapi:$GITHUB_SHA" .
+          docker push "$ACR_LOGIN_SERVER/ordersapi:$GITHUB_SHA"
 
-      - name: Deploy AuthAPI
+      - name: Build GatewayEcom
         run: |
-          az containerapp update \
-            --name authapi \
-            --resource-group "$RESOURCE_GROUP" \
-            --image "$ACR_NAME.azurecr.io/authapi:${GITHUB_SHA}"
+          docker build -f GatewayEcom/Dockerfile \
+            -t "$ACR_LOGIN_SERVER/gatewayecom:$GITHUB_SHA" .
+          docker push "$ACR_LOGIN_SERVER/gatewayecom:$GITHUB_SHA"
 
-      - name: Deploy ProductsAPI
-        run: |
-          az containerapp update \
-            --name productsapi \
-            --resource-group "$RESOURCE_GROUP" \
-            --image "$ACR_NAME.azurecr.io/productsapi:${GITHUB_SHA}"
-
-      - name: Deploy CartAPI
-        run: |
-          az containerapp update \
-            --name cartapi \
-            --resource-group "$RESOURCE_GROUP" \
-            --image "$ACR_NAME.azurecr.io/cartapi:${GITHUB_SHA}"
-
-      - name: Deploy OrdersAPI
-        run: |
-          az containerapp update \
-            --name ordersapi \
-            --resource-group "$RESOURCE_GROUP" \
-            --image "$ACR_NAME.azurecr.io/ordersapi:${GITHUB_SHA}"
-
-      - name: Deploy GatewayEcom
-        run: |
-          az containerapp update \
-            --name gatewayecom \
-            --resource-group "$RESOURCE_GROUP" \
-            --image "$ACR_NAME.azurecr.io/gatewayecom:${GITHUB_SHA}"
+      - name: Logout from registry
+        if: always()
+        run: docker logout "$ACR_LOGIN_SERVER"
