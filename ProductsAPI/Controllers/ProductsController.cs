@@ -1,4 +1,7 @@
+
 using AutoMapper;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,17 +15,21 @@ namespace ProductsAPI.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+        private static readonly string[] AllowedImageExtensions =
+            [".jpg", ".jpeg", ".png", ".webp", ".gif"];
 
         private readonly CatalogDbContext _db;
         private readonly IMapper _mapper;
-        private readonly IWebHostEnvironment _env;
+        private readonly BlobContainerClient _blobContainer;
 
-        public ProductsController(CatalogDbContext db, IMapper mapper, IWebHostEnvironment env)
+        public ProductsController(
+            CatalogDbContext db,
+            IMapper mapper,
+            BlobContainerClient blobContainer)
         {
             _db = db;
             _mapper = mapper;
-            _env = env;
+            _blobContainer = blobContainer;
         }
 
         [HttpPost("upload")]
@@ -30,22 +37,41 @@ namespace ProductsAPI.Controllers
         [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<IActionResult> Upload(IFormFile file)
         {
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (file.Length == 0 || !AllowedImageExtensions.Contains(extension))
+            if (file == null || file.Length == 0)
             {
-                return BadRequest("Upload a non-empty .jpg, .jpeg, .png, .webp or .gif file.");
+                return BadRequest("Please select an image.");
             }
 
-            var imagesDir = Path.Combine(_env.WebRootPath, "images");
-            Directory.CreateDirectory(imagesDir);
+            var extension = Path.GetExtension(file.FileName)
+                .ToLowerInvariant();
+
+            if (!AllowedImageExtensions.Contains(extension))
+            {
+                return BadRequest(
+                    "Upload a non-empty .jpg, .jpeg, .png, .webp or .gif file.");
+            }
 
             var fileName = $"{Guid.NewGuid()}{extension}";
-            using (var stream = new FileStream(Path.Combine(imagesDir, fileName), FileMode.CreateNew))
+
+            var blobClient = _blobContainer.GetBlobClient(fileName);
+
+            using (var stream = file.OpenReadStream())
             {
-                await file.CopyToAsync(stream);
+                await blobClient.UploadAsync(
+                    stream,
+                    new BlobUploadOptions
+                    {
+                        HttpHeaders = new BlobHttpHeaders
+                        {
+                            ContentType = file.ContentType
+                        }
+                    });
             }
 
-            return Ok(new { imagePath = $"/images/{fileName}" });
+            return Ok(new
+            {
+                imagePath = blobClient.Uri.ToString()
+            });
         }
 
         [HttpGet]
@@ -55,6 +81,7 @@ namespace ProductsAPI.Controllers
                 .Include(p => p.Category)
                 .Where(p => p.IsActive)
                 .ToListAsync();
+
             return Ok(_mapper.Map<IEnumerable<ProductResponseDTO>>(products));
         }
 
@@ -64,6 +91,7 @@ namespace ProductsAPI.Controllers
             var product = await _db.Products
                 .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+
             if (product == null)
             {
                 return NotFound();
@@ -74,9 +102,11 @@ namespace ProductsAPI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ProductResponseDTO>> Post([FromBody] ProductDTO productDTO)
+        public async Task<ActionResult<ProductResponseDTO>> Post(
+            [FromBody] ProductDTO productDTO)
         {
             var product = _mapper.Map<Product>(productDTO);
+
             product.IsActive = true;
             product.CreatedAt = DateTime.UtcNow;
             product.UpdatedAt = product.CreatedAt;
@@ -89,15 +119,21 @@ namespace ProductsAPI.Controllers
                 .Include(p => p.Category)
                 .FirstAsync(p => p.Id == product.Id);
 
-            return CreatedAtAction(nameof(Get), new { id = saved.Id },
+            return CreatedAtAction(
+                nameof(Get),
+                new { id = saved.Id },
                 _mapper.Map<ProductResponseDTO>(saved));
         }
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ProductResponseDTO>> Put(int id, [FromBody] ProductDTO productDTO)
+        public async Task<ActionResult<ProductResponseDTO>> Put(
+            int id,
+            [FromBody] ProductDTO productDTO)
         {
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+            var product = await _db.Products
+                .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+
             if (product == null)
             {
                 return NotFound();
@@ -105,6 +141,7 @@ namespace ProductsAPI.Controllers
 
             _mapper.Map(productDTO, product);
             product.UpdatedAt = DateTime.UtcNow;
+
             await _db.SaveChangesAsync();
 
             var updated = await _db.Products
@@ -119,7 +156,9 @@ namespace ProductsAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+            var product = await _db.Products
+                .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+
             if (product == null)
             {
                 return NotFound();
@@ -127,6 +166,7 @@ namespace ProductsAPI.Controllers
 
             product.IsActive = false;
             product.UpdatedAt = DateTime.UtcNow;
+
             await _db.SaveChangesAsync();
 
             return NoContent();
@@ -134,7 +174,9 @@ namespace ProductsAPI.Controllers
 
         [HttpPost("{id:int}/reserve")]
         [Authorize]
-        public async Task<IActionResult> Reserve(int id, [FromBody] int quantity)
+        public async Task<IActionResult> Reserve(
+            int id,
+            [FromBody] int quantity)
         {
             if (quantity < 1)
             {
@@ -149,8 +191,12 @@ namespace ProductsAPI.Controllers
 
             if (updated == 0)
             {
-                var exists = await _db.Products.AnyAsync(p => p.Id == id && p.IsActive);
-                return exists ? Conflict("Insufficient stock.") : NotFound();
+                var exists = await _db.Products
+                    .AnyAsync(p => p.Id == id && p.IsActive);
+
+                return exists
+                    ? Conflict("Insufficient stock.")
+                    : NotFound();
             }
 
             return NoContent();

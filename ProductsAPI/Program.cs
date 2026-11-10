@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProductsAPI;
 using ProductsAPI.DBcontext;
+using Azure.Storage.Blobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,26 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 
 builder.Services.AddDbContext<CatalogDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CatalogDb")));
+
+
+builder.Services.AddSingleton<BlobContainerClient>(serviceProvider =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+
+    var connectionString = configuration.GetConnectionString("AzureBlobStorage");
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException(
+            "Azure Blob Storage connection string is not configured.");
+    }
+
+    var blobServiceClient = new BlobServiceClient(connectionString);
+
+    return blobServiceClient.GetBlobContainerClient("images");
+});
+
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
